@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ergometría</title>
+<meta name="description" content="Calculadora de fórmulas ergométricas con registro por paciente y exportación a Excel">
+<meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ergometría">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+:root{
+  --bg:#f4f6f9;--surface:#fff;--surface-2:#eef2f6;--text:#0f172a;--muted:#5b6475;--border:#d9e0ea;
+  --accent:#0f766e;--accent-ink:#fff;--accent-soft:#d3efea;--warn:#b45309;--warn-soft:#fef3c7;
+  --danger:#b91c1c;--danger-soft:#fde4e4;--radius:14px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#0b1120;--surface:#131b2e;--surface-2:#1b2540;--text:#e6ebf4;--muted:#93a0b8;--border:#27324c;
+    --accent:#2dd4bf;--accent-ink:#04201c;--accent-soft:#123b38;--warn:#fbbf24;--warn-soft:#382a0a;
+    --danger:#f87171;--danger-soft:#3b1515;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+header.top{position:sticky;top:0;z-index:5;background:var(--bg)}
+.head{display:flex;align-items:center;gap:12px;padding-top:calc(env(safe-area-inset-top) + 14px);padding-bottom:10px}
+.logo{width:40px;height:40px;border-radius:11px;background:#0f172a;display:grid;place-items:center;flex:none}
+.head .titles{flex:1;min-width:0}
+h1{font-size:1.15rem;margin:0;letter-spacing:-.01em}
+.sub{margin:0;color:var(--muted);font-size:.82rem}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--surface-2);padding:4px;border-radius:12px;margin:2px 0 14px}
+.tabs button{appearance:none;border:0;background:transparent;color:var(--muted);font:inherit;font-weight:650;padding:9px 10px;border-radius:9px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.badge{display:inline-block;min-width:1.6em;padding:0 .45em;margin-left:.3em;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:.78rem;line-height:1.55}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 14px 16px;margin:0 0 12px;min-width:0}
+legend,.card h2{display:block;font-size:.76rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;padding:0;margin:0 0 10px}
+legend{float:left;width:100%}
+legend+*{clear:both}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.full{grid-column:1/-1}
+label.field{display:flex;flex-direction:column;gap:5px;font-size:.86rem;font-weight:600;min-width:0}
+.opt{color:var(--muted);font-weight:500}
+input,textarea{width:100%;font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;outline:none;min-width:0}
+input[type=date],input[type=time]{min-height:44px}
+textarea{resize:vertical}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.control{position:relative;display:flex;align-items:center}
+.control input{padding-right:54px}
+.unit{position:absolute;right:12px;color:var(--muted);font-size:.84rem;font-weight:500;pointer-events:none}
+.msg{font-size:.75rem;font-weight:500;color:var(--muted)}
+.msg:empty{display:none}
+.field.warn input{border-color:var(--warn)}.field.warn .msg{color:var(--warn)}
+.field.bad input{border-color:var(--danger)}.field.bad .msg{color:var(--danger)}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--surface-2);border-radius:12px;padding:12px;min-width:0}
+.tile .k{font-size:.78rem;color:var(--muted);font-weight:650}
+.tile .v{font-size:1.65rem;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile .v small{font-size:.82rem;font-weight:600;color:var(--muted);margin-left:4px;letter-spacing:0}
+.tile.empty .v{color:var(--muted)}
+.tile .f{font-size:.72rem;color:var(--muted);margin-top:4px}
+.actions{display:flex;gap:10px;position:sticky;bottom:0;padding:12px 0 calc(12px + env(safe-area-inset-bottom));background:linear-gradient(to bottom,transparent,var(--bg) 35%)}
+.btn{appearance:none;border:1px solid var(--border);background:var(--surface);color:var(--text);font:inherit;font-weight:650;padding:12px 16px;border-radius:12px;cursor:pointer;text-align:center}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.small{padding:7px 12px;font-size:.86rem;border-radius:10px}
+.btn.danger{color:var(--danger)}
+.btn.danger-fill{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.actions .primary{flex:1}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap}
+.btnrow .btn{flex:1 1 140px}
+.filebtn{display:block;margin-top:10px;position:relative;overflow:hidden}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.note{font-size:.84rem;color:var(--muted);margin:0 0 12px}
+.note.small{font-size:.76rem;margin:12px 0 0}
+.banner{border-radius:12px;padding:10px 12px;font-size:.85rem;margin:0 0 12px;background:var(--warn-soft);color:var(--text);display:flex;gap:10px;align-items:flex-start}
+.banner.info{background:var(--accent-soft)}
+.banner p{margin:0;flex:1}
+.link{appearance:none;border:0;background:none;color:var(--accent);font:inherit;font-weight:700;padding:0;cursor:pointer}
+.search{margin:0 0 12px;background:var(--surface)}
+.rec .name{font-weight:700}
+.rec .meta{font-size:.82rem;color:var(--muted);margin:2px 0 8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:.78rem;background:var(--surface-2);padding:3px 9px;border-radius:999px;font-variant-numeric:tabular-nums}
+.rec .obs{font-size:.82rem;margin:8px 0 0;white-space:pre-wrap}
+.rec .row-actions{display:flex;gap:8px;margin-top:10px}
+.empty-list{text-align:center;color:var(--muted);padding:28px 12px;font-size:.92rem}
+.foot{text-align:center;color:var(--muted);font-size:.72rem;margin:8px 0 28px}
+.modal{position:fixed;inset:0;background:rgba(2,6,23,.55);display:grid;place-items:center;padding:20px;z-index:60}
+.modal .box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;max-width:380px;width:100%}
+.modal p{margin:0 0 16px}
+#toast{position:fixed;left:50%;bottom:calc(86px + env(safe-area-inset-bottom));transform:translate(-50%,16px);opacity:0;transition:opacity .2s,transform .2s;background:var(--text);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:.9rem;max-width:calc(100% - 32px);z-index:70;pointer-events:none;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:380px){.results{grid-template-columns:1fr}.tile .v{font-size:1.5rem}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap head">
+    <div class="logo" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="24" height="24"><path d="M2 13h4l2-5 3 10 3-8 2 3h6" fill="none" stroke="#2dd4bf" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="titles">
+      <h1>Ergometría</h1>
+      <p class="sub">Fórmulas ergométricas · registro por paciente</p>
+    </div>
+    <button class="btn small" id="btn-install" hidden>Instalar</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="banner" id="banner-preview" hidden>
+    <p><b>Vista previa.</b> Aquí puedes probar los cálculos, pero no se instala, no descarga el Excel y los registros pueden borrarse. La versión completa es la que publiques en tu propio enlace.</p>
+  </div>
+  <div class="banner info" id="banner-ios" hidden>
+    <p>Para instalarla en iPhone: botón <b>Compartir</b> → <b>Agregar a pantalla de inicio</b>.</p>
+    <button class="link" id="btn-ios-close" aria-label="Cerrar">✕</button>
+  </div>
+  <div class="banner" id="banner-storage" hidden>
+    <p>Este navegador no permite guardar registros. Exporta el Excel antes de cerrar la app.</p>
+  </div>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-calc" aria-selected="true" aria-controls="panel-calc">Calcular</button>
+    <button role="tab" id="tab-regs" aria-selected="false" aria-controls="panel-regs">Registros <span class="badge" id="count">0</span></button>
+  </div>
+
+  <!-- ===== Calcular ===== -->
+  <section id="panel-calc" role="tabpanel" aria-labelledby="tab-calc">
+    <form id="form" novalidate autocomplete="off">
+      <div class="banner info" id="edit-note" hidden>
+        <p>Estás editando un registro guardado.</p>
+        <button type="button" class="link" id="btn-cancel-edit">Cancelar</button>
+      </div>
+
+      <fieldset class="card">
+        <legend>Paciente</legend>
+        <div class="grid">
+          <label class="field" id="f-apPaterno">Apellido paterno<input id="apPaterno" autocapitalize="words" enterkeyhint="next"><span class="msg"></span></label>
+          <label class="field" id="f-apMaterno">Apellido materno<input id="apMaterno" autocapitalize="words" enterkeyhint="next"><span class="msg"></span></label>
+          <label class="field full" id="f-nombres">Nombre(s)<input id="nombres" autocapitalize="words" enterkeyhint="next"><span class="msg"></span></label>
+          <label class="field full" id="f-expediente"><span>Expediente <span class="opt">(opcional)</span></span><input id="expediente" enterkeyhint="next"><span class="msg"></span></label>
+          <label class="field" id="f-fecha">Fecha de la prueba<input type="date" id="fecha"><span class="msg"></span></label>
+          <label class="field" id="f-hora">Hora<input type="time" id="hora"><span class="msg"></span></label>
+        </div>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Datos de la prueba</legend>
+        <div class="grid" id="inputs"></div>
+      </fieldset>
+
+      <section class="card" aria-live="polite">
+        <h2>Resultados</h2>
+        <div class="results" id="results"></div>
+      </section>
+
+      <fieldset class="card">
+        <legend>Observaciones</legend>
+        <textarea id="obs" rows="3" placeholder="Opcional"></textarea>
+      </fieldset>
+
+      <div class="actions">
+        <button type="button" class="btn" id="btn-clear">Limpiar</button>
+        <button type="submit" class="btn primary" id="btn-save">Guardar registro</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ===== Registros ===== -->
+  <section id="panel-regs" role="tabpanel" aria-labelledby="tab-regs" hidden>
+    <div class="card">
+      <h2>Hoja de Excel</h2>
+      <p class="note">Exporta todos los registros en un solo archivo .xlsx: una fila por prueba, con las fórmulas activas y una hoja aparte con las fórmulas usadas.</p>
+      <div class="btnrow">
+        <button class="btn primary" id="btn-download">Descargar Excel</button>
+        <button class="btn" id="btn-share">Compartir Excel</button>
+      </div>
+      <label class="btn filebtn">Importar Excel (restaurar)
+        <input type="file" id="file-import" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      </label>
+      <p class="note small">Los registros se guardan solo en este dispositivo. Exporta el Excel con regularidad: es tu respaldo y se puede volver a importar.</p>
+    </div>
+    <input type="search" id="search" class="search" placeholder="Buscar por paciente o expediente">
+    <div id="list"></div>
+  </section>
+
+  <p class="foot" id="foot"></p>
+</main>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-text" hidden>
+  <div class="box">
+    <p id="modal-text"></p>
+    <div class="btnrow">
+      <button class="btn" id="modal-cancel">Cancelar</button>
+      <button class="btn danger-fill" id="modal-ok">Eliminar</button>
+    </div>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+const APP_VERSION = '1.0.0';
+const STORE_KEY = 'ergometria.registros.v1';
+const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const IN_FRAME = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const IS_STANDALONE = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+
+/* ---------- Datos de entrada ---------- */
+const INPUTS = [
+  { id: 'edad',  label: 'Edad',          unit: 'años', mode: 'numeric', hard: [1, 119],  soft: [10, 100] },
+  { id: 'peso',  label: 'Peso',          unit: 'kg',   mode: 'decimal', hard: [1, 400],  soft: [30, 250] },
+  { id: 'fc',    label: 'FC alcanzada',  unit: 'lpm',  mode: 'numeric', hard: [1, 300],  soft: [40, 230], hint: 'Latidos máximos logrados en la prueba' },
+  { id: 'watts', label: 'Watts máximos', unit: 'W',    mode: 'decimal', hard: [1, 2000], soft: [10, 600] },
+];
+
+/* ---------- Fórmulas (para agregar una, añade un objeto aquí) ----------
+   calc(v, r): v = datos de entrada, r = resultados anteriores
+   xl(c): fórmula de Excel; c = referencias de celda de la fila           */
+const FORMULAS = [
+  { id: 'fcmt', label: 'FC máxima teórica (clásica)', xlHeader: 'FCMT clásica (lpm)', unit: 'lpm', dec: 0,
+    param: 'FC máxima teórica (FCMT)', text: '220 − Edad', vars: 'Edad en años. Resultado en latidos por minuto (lpm).',
+    chip: s => `FCMT ${s} lpm`,
+    calc: v => 220 - v.edad, xl: c => `220-${c.edad}` },
+  { id: 'pct', label: '% de FCMT alcanzado', xlHeader: '% FCMT alcanzado', unit: '%', dec: 1,
+    param: '% de FCMT alcanzado', text: '(FC alcanzada ÷ FCMT) × 100', vars: 'FC alcanzada: latidos máximos logrados en la prueba.',
+    chip: s => `${s} % de FCMT`,
+    calc: (v, r) => v.fc / r.fcmt * 100, xl: c => `${c.fc}/${c.fcmt}*100` },
+  { id: 'potrel', label: 'Potencia relativa', xlHeader: 'Potencia relativa (W/kg)', unit: 'W/kg', dec: 2,
+    param: 'Potencia relativa', text: 'Watts máximos ÷ Peso', vars: 'Watts alcanzados divididos entre el peso en kg (W/kg).',
+    chip: s => `${s} W/kg`,
+    calc: v => v.watts / v.peso, xl: c => `${c.watts}/${c.peso}` },
+  { id: 'mets', label: 'METs (cicloergómetro)', xlHeader: 'METs (cicloergómetro)', unit: 'METs', dec: 1,
+    param: 'METs (en cicloergómetro)', text: '[(10.8 × Watts) ÷ Peso + 7] ÷ 3.5', vars: 'Watts máximos y peso en kg.',
+    chip: s => `${s} METs`,
+    calc: v => ((10.8 * v.watts) / v.peso + 7) / 3.5, xl: c => `((10.8*${c.watts})/${c.peso}+7)/3.5` },
+];
+
+const TEXT_FIELDS = ['apPaterno', 'apMaterno', 'nombres', 'expediente', 'fecha', 'hora', 'obs'];
+
+/* ---------- Utilidades ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+const pad = n => String(n).padStart(2, '0');
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+
+function parseNum(s) {
+  if (s == null) return NaN;
+  const t = String(s).trim().replace(',', '.');
+  if (t === '') return NaN;
+  const n = Number(t);
+  return Number.isFinite(n) ? n : NaN;
+}
+function fmt(n, dec) {
+  if (n == null || !Number.isFinite(n)) return '—';
+  return n.toLocaleString('es-MX', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function todayISO() { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; }
+function nowHHMM() { const d = new Date(); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+function fmtFecha(iso) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : 'fecha no registrada'; }
+function newId() {
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+function nombreCompleto(r) {
+  const apellidos = [r.apPaterno, r.apMaterno].map(x => (x || '').trim()).filter(Boolean).join(' ');
+  const nombres = (r.nombres || '').trim();
+  if (apellidos && nombres) return `${apellidos}, ${nombres}`;
+  return apellidos || nombres || 'Sin nombre';
+}
+function compute(v) {
+  const r = {};
+  for (const f of FORMULAS) {
+    let val;
+    try { val = f.calc(v, r); } catch (e) { val = NaN; }
+    r[f.id] = Number.isFinite(val) ? val : null;
+  }
+  return r;
+}
+
+/* ---------- Almacenamiento local ---------- */
+const store = {
+  items: [], ok: true,
+  load() {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      const data = raw ? JSON.parse(raw) : [];
+      this.items = Array.isArray(data) ? data : [];
+    } catch (e) { this.ok = false; this.items = []; }
+  },
+  save() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(this.items)); this.ok = true; }
+    catch (e) { this.ok = false; }
+    $('#banner-storage').hidden = this.ok;
+    return this.ok;
+  },
+};
+
+/* ---------- Interfaz: notificaciones y confirmación ---------- */
+let toastTimer;
+function toast(msg) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 3200);
+}
+function confirmBox(text, okLabel = 'Eliminar') {
+  return new Promise(resolve => {
+    const m = $('#modal');
+    $('#modal-text').textContent = text; $('#modal-ok').textContent = okLabel;
+    m.hidden = false;
+    const done = val => { m.hidden = true; $('#modal-ok').onclick = $('#modal-cancel').onclick = null; resolve(val); };
+    $('#modal-ok').onclick = () => done(true);
+    $('#modal-cancel').onclick = () => done(false);
+  });
+}
+
+/* ---------- Formulario ---------- */
+let editingId = null;
+
+function renderInputs() {
+  $('#inputs').innerHTML = INPUTS.map(f => `
+    <label class="field" id="f-${f.id}">${esc(f.label)}
+      <span class="control"><input id="${f.id}" inputmode="${f.mode}" enterkeyhint="next"><span class="unit">${esc(f.unit)}</span></span>
+      <span class="msg">${esc(f.hint || '')}</span>
+    </label>`).join('');
+}
+function setFieldState(fieldEl, state, msg) {
+  if (!fieldEl) return;
+  fieldEl.classList.toggle('warn', state === 'warn');
+  fieldEl.classList.toggle('bad', state === 'bad');
+  const m = fieldEl.querySelector('.msg');
+  if (m) m.textContent = msg || '';
+}
+function readInputs(apply, requireAll) {
+  const values = {}; let allOk = true;
+  for (const f of INPUTS) {
+    const raw = $('#' + f.id).value.trim();
+    let n = parseNum(raw), state = '', msg = f.hint || '';
+    if (raw === '') {
+      n = NaN;
+      if (requireAll) { state = 'bad'; msg = 'Dato requerido'; allOk = false; }
+    } else if (!Number.isFinite(n)) {
+      state = 'bad'; msg = 'Número no válido'; allOk = false;
+    } else if (n < f.hard[0] || n > f.hard[1]) {
+      state = 'bad'; msg = `Fuera de rango (${f.hard[0]}–${f.hard[1]} ${f.unit})`; n = NaN; allOk = false;
+    } else if (n < f.soft[0] || n > f.soft[1]) {
+      state = 'warn'; msg = `Valor inusual: verifica (habitual ${f.soft[0]}–${f.soft[1]} ${f.unit})`;
+    }
+    values[f.id] = n;
+    if (apply) setFieldState($('#f-' + f.id), state, msg);
+  }
+  return { values, allOk };
+}
+function renderResults(values) {
+  const r = compute(values);
+  $('#results').innerHTML = FORMULAS.map(f => {
+    const v = r[f.id];
+    return `<div class="tile${v == null ? ' empty' : ''}">
+      <div class="k">${esc(f.label)}</div>
+      <div class="v">${fmt(v, f.dec)}<small>${esc(f.unit)}</small></div>
+      <div class="f">${esc(f.text)}</div>
+    </div>`;
+  }).join('');
+}
+function update() { renderResults(readInputs(true, false).values); }
+
+function resetForm() {
+  for (const k of TEXT_FIELDS) $('#' + k).value = '';
+  for (const f of INPUTS) $('#' + f.id).value = '';
+  $('#fecha').value = todayISO(); $('#hora').value = nowHHMM();
+  document.querySelectorAll('.field').forEach(el => el.classList.remove('warn', 'bad'));
+  ['apPaterno', 'nombres', 'fecha'].forEach(k => setFieldState($('#f-' + k), '', ''));
+  editingId = null; $('#edit-note').hidden = true; $('#btn-save').textContent = 'Guardar registro';
+  update();
+}
+function fillForm(r) {
+  for (const k of TEXT_FIELDS) $('#' + k).value = r[k] || '';
+  for (const f of INPUTS) $('#' + f.id).value = Number.isFinite(r[f.id]) ? String(r[f.id]) : '';
+  update();
+}
+function onSave(ev) {
+  ev.preventDefault();
+  let ok = true;
+  const ap = $('#apPaterno').value.trim(), nom = $('#nombres').value.trim(), fe = $('#fecha').value;
+  setFieldState($('#f-apPaterno'), ap ? '' : 'bad', ap ? '' : 'Escribe el apellido paterno'); if (!ap) ok = false;
+  setFieldState($('#f-nombres'), nom ? '' : 'bad', nom ? '' : 'Escribe el nombre'); if (!nom) ok = false;
+  setFieldState($('#f-fecha'), fe ? '' : 'bad', fe ? '' : 'Indica la fecha'); if (!fe) ok = false;
+  const { values, allOk } = readInputs(true, true);
+  if (!ok || !allOk) { toast('Revisa los campos marcados en rojo'); return; }
+
+  const now = new Date().toISOString();
+  const rec = {
+    apPaterno: ap, apMaterno: $('#apMaterno').value.trim(), nombres: nom,
+    expediente: $('#expediente').value.trim(), fecha: fe, hora: $('#hora').value || '',
+    edad: values.edad, peso: values.peso, fc: values.fc, watts: values.watts,
+    obs: $('#obs').value.trim(), actualizado: now,
+  };
+  if (editingId) {
+    const i = store.items.findIndex(x => x.id === editingId);
+    if (i >= 0) store.items[i] = { ...store.items[i], ...rec };
+  } else {
+    store.items.push({ id: newId(), creado: now, ...rec });
+  }
+  const saved = store.save();
+  toast(saved ? (editingId ? 'Registro actualizado' : 'Registro guardado') : 'No se pudo guardar en este dispositivo');
+  resetForm(); updateCount();
+}
+
+/* ---------- Lista de registros ---------- */
+const sortKey = r => `${r.fecha || ''} ${r.hora || ''} ${r.creado || ''}`;
+function updateCount() { $('#count').textContent = store.items.length; }
+function renderList() {
+  const q = norm($('#search').value);
+  const items = store.items
+    .filter(r => !q || norm(nombreCompleto(r) + ' ' + (r.expediente || '')).includes(q))
+    .sort((a, b) => sortKey(b).localeCompare(sortKey(a)));
+  if (!items.length) {
+    $('#list').innerHTML = `<div class="empty-list">${store.items.length ? 'Sin coincidencias.' : 'Aún no hay registros guardados.'}</div>`;
+    return;
+  }
+  $('#list').innerHTML = items.map(r => {
+    const res = compute(r);
+    const chips = FORMULAS.map(f => `<span class="chip">${esc(f.chip(fmt(res[f.id], f.dec)))}</span>`).join('');
+    const meta = [fmtFecha(r.fecha) + (r.hora ? ' · ' + r.hora : ''), r.expediente ? 'Exp. ' + r.expediente : '',
+      `${fmt(r.edad, 0)} años · ${fmt(r.peso, r.peso % 1 ? 1 : 0)} kg · FC ${fmt(r.fc, 0)} lpm · ${fmt(r.watts, 0)} W`].filter(Boolean).join(' · ');
+    return `<article class="card rec" data-id="${esc(r.id)}">
+      <div class="name">${esc(nombreCompleto(r))}</div>
+      <div class="meta">${esc(meta)}</div>
+      <div class="chips">${chips}</div>
+      ${r.obs ? `<p class="obs">${esc(r.obs)}</p>` : ''}
+      <div class="row-actions">
+        <button class="btn small" data-act="edit">Editar</button>
+        <button class="btn small danger" data-act="del">Eliminar</button>
+      </div>
+    </article>`;
+  }).join('');
+}
+async function onListClick(ev) {
+  const btn = ev.target.closest('button[data-act]'); if (!btn) return;
+  const id = btn.closest('[data-id]').dataset.id;
+  const rec = store.items.find(x => x.id === id); if (!rec) return;
+  if (btn.dataset.act === 'edit') {
+    fillForm(rec); editingId = id;
+    $('#edit-note').hidden = false; $('#btn-save').textContent = 'Guardar cambios';
+    showTab('calc');
+  } else if (btn.dataset.act === 'del') {
+    const ok = await confirmBox(`¿Eliminar el registro de ${nombreCompleto(rec)} del ${fmtFecha(rec.fecha)}? Esta acción no se puede deshacer.`);
+    if (!ok) return;
+    store.items = store.items.filter(x => x.id !== id);
+    store.save(); updateCount(); renderList(); toast('Registro eliminado');
+    if (editingId === id) resetForm();
+  }
+}
+
+/* ---------- Pestañas ---------- */
+function showTab(which) {
+  const calc = which === 'calc';
+  $('#tab-calc').setAttribute('aria-selected', String(calc));
+  $('#tab-regs').setAttribute('aria-selected', String(!calc));
+  $('#panel-calc').hidden = !calc; $('#panel-regs').hidden = calc;
+  if (!calc) renderList();
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Excel ---------- */
+let excelReady;
+function loadExcelJS() {
+  if (window.ExcelJS) return Promise.resolve();
+  if (!excelReady) {
+    excelReady = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'exceljs.min.js';
+      s.onload = () => resolve();
+      s.onerror = () => { excelReady = null; reject(new Error('No se pudo cargar el módulo de Excel')); };
+      document.head.appendChild(s);
+    });
+  }
+  return excelReady;
+}
+const XL_COLS = [
+  { key: 'fecha', header: 'Fecha', width: 12 },
+  { key: 'hora', header: 'Hora', width: 8 },
+  { key: 'paciente', header: 'Paciente', width: 34 },
+  { key: 'apPaterno', header: 'Apellido paterno', width: 18 },
+  { key: 'apMaterno', header: 'Apellido materno', width: 18 },
+  { key: 'nombres', header: 'Nombre(s)', width: 20 },
+  { key: 'expediente', header: 'Expediente', width: 14 },
+  { key: 'edad', header: 'Edad (años)', width: 11 },
+  { key: 'peso', header: 'Peso (kg)', width: 10 },
+  { key: 'fc', header: 'FC alcanzada (lpm)', width: 13 },
+  { key: 'watts', header: 'Watts máximos (W)', width: 13 },
+  ...FORMULAS.map(f => ({ key: f.id, header: f.xlHeader, width: 15, formula: f })),
+  { key: 'obs', header: 'Observaciones', width: 40 },
+  { key: 'id', header: 'ID (no editar)', width: 38 },
+];
+function isoToExcelDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3])) : null;
+}
+async function buildWorkbook(records) {
+  await loadExcelJS();
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Ergometría'; wb.created = new Date();
+  wb.calcProperties.fullCalcOnLoad = true;
+  const ws = wb.addWorksheet('Registros', { views: [{ state: 'frozen', ySplit: 1 }] });
+  ws.columns = XL_COLS.map(c => ({ header: c.header, key: c.key, width: c.width }));
+  const letter = {}; XL_COLS.forEach((c, i) => { letter[c.key] = ws.getColumn(i + 1).letter; });
+
+  [...records].sort((a, b) => sortKey(a).localeCompare(sortKey(b))).forEach((r, i) => {
+    const rowNum = i + 2, ref = {};
+    for (const k in letter) ref[k] = letter[k] + rowNum;
+    const res = compute(r);
+    const row = {
+      fecha: isoToExcelDate(r.fecha), hora: r.hora || '', paciente: nombreCompleto(r),
+      apPaterno: r.apPaterno || '', apMaterno: r.apMaterno || '', nombres: r.nombres || '', expediente: r.expediente || '',
+      edad: r.edad, peso: r.peso, fc: r.fc, watts: r.watts, obs: r.obs || '', id: r.id,
+    };
+    for (const f of FORMULAS) row[f.id] = res[f.id] == null ? { formula: f.xl(ref) } : { formula: f.xl(ref), result: res[f.id] };
+    ws.addRow(row);
+  });
+
+  ws.getColumn('fecha').numFmt = 'dd/mm/yyyy';
+  for (const f of FORMULAS) ws.getColumn(f.id).numFmt = f.dec ? '0.' + '0'.repeat(f.dec) : '0';
+  const head = ws.getRow(1);
+  head.height = 32;
+  head.eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+    cell.numFmt = 'General';
+  });
+  ws.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: XL_COLS.length } };
+
+  const wf = wb.addWorksheet('Fórmulas');
+  wf.columns = [
+    { header: 'Parámetro', key: 'p', width: 28 },
+    { header: 'Fórmula', key: 'f', width: 38 },
+    { header: 'Variables y unidades', key: 'v', width: 58 },
+  ];
+  FORMULAS.forEach(f => wf.addRow({ p: f.param, f: f.text, v: f.vars }));
+  wf.getRow(1).eachCell(cell => {
+    cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+    cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0F766E' } };
+  });
+  wf.eachRow(row => row.eachCell(cell => { cell.alignment = { vertical: 'top', wrapText: true }; }));
+  wf.addRow({});
+  wf.addRow({ p: `Generado con Ergometría v${APP_VERSION} el ${fmtFecha(todayISO())} a las ${nowHHMM()}` });
+  return wb;
+}
+function exportName() { const d = new Date(); return `Registro_de_ergometria__${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`; }
+async function makeExcelBlob() {
+  const wb = await buildWorkbook(store.items);
+  const buf = await wb.xlsx.writeBuffer();
+  return new Blob([buf], { type: XLSX_MIME });
+}
+async function onDownload() {
+  if (!store.items.length) { toast('No hay registros para exportar'); return; }
+  try {
+    const blob = await makeExcelBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = exportName();
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    toast('Excel generado');
+  } catch (e) { toast('Error al generar el Excel: ' + e.message); }
+}
+async function onShare() {
+  if (!store.items.length) { toast('No hay registros para exportar'); return; }
+  try {
+    const blob = await makeExcelBlob();
+    const file = new File([blob], exportName(), { type: XLSX_MIME });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'Registro de ergometría' });
+    } else {
+      toast('Este navegador no permite compartir archivos; usa Descargar');
+    }
+  } catch (e) {
+    if (e && e.name === 'AbortError') return;
+    toast('No se pudo compartir: ' + e.message);
+  }
+}
+
+/* Importación (restaurar desde un Excel exportado por la app) */
+function cellVal(v) {
+  if (v && typeof v === 'object' && !(v instanceof Date)) {
+    if ('result' in v) return v.result;
+    if (Array.isArray(v.richText)) return v.richText.map(t => t.text).join('');
+    if ('text' in v) return v.text;
+    if ('formula' in v) return null;
+  }
+  return v;
+}
+const str = v => { v = cellVal(v); return v == null ? '' : String(v).trim(); };
+const num = v => { v = cellVal(v); return typeof v === 'number' ? v : parseNum(v); };
+function toISODate(v) {
+  v = cellVal(v);
+  if (v instanceof Date) return `${v.getUTCFullYear()}-${pad(v.getUTCMonth() + 1)}-${pad(v.getUTCDate())}`;
+  if (typeof v === 'number') { const d = new Date(Math.round((v - 25569) * 86400000)); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; }
+  if (typeof v === 'string') {
+    let m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(v.trim()); if (m) return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+    m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v.trim()); if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+  }
+  return '';
+}
+function toHHMM(v) {
+  v = cellVal(v);
+  if (v instanceof Date) return `${pad(v.getUTCHours())}:${pad(v.getUTCMinutes())}`;
+  if (typeof v === 'number' && v >= 0 && v < 1) { const m = Math.round(v * 1440); return `${pad(Math.floor(m / 60) % 24)}:${pad(m % 60)}`; }
+  if (typeof v === 'string') { const m = /^(\d{1,2}):(\d{2})/.exec(v.trim()); if (m) return `${pad(m[1])}:${m[2]}`; }
+  return '';
+}
+function splitPaciente(txt) {
+  const out = { apPaterno: '', apMaterno: '', nombres: '' };
+  const [ap, nom] = String(txt || '').split(',').map(s => (s || '').trim());
+  if (nom === undefined) { out.apPaterno = ap; return out; }
+  const parts = ap.split(/\s+/).filter(Boolean);
+  if (parts.length === 2) { out.apPaterno = parts[0]; out.apMaterno = parts[1]; } else out.apPaterno = ap;
+  out.nombres = nom;
+  return out;
+}
+async function onImport(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  ev.target.value = '';
+  if (!file) return;
+  try {
+    await loadExcelJS();
+    const wb = new ExcelJS.Workbook();
+    await wb.xlsx.load(await file.arrayBuffer());
+    const ws = wb.getWorksheet('Registros') || wb.worksheets[0];
+    if (!ws) throw new Error('el archivo no tiene hojas');
+    const byHeader = {}; XL_COLS.forEach(c => { byHeader[norm(c.header)] = c.key; }); byHeader['id'] = 'id';
+    const colKey = {};
+    ws.getRow(1).eachCell((cell, col) => { const k = byHeader[norm(str(cell.value))]; if (k) colKey[col] = k; });
+    const found = new Set(Object.values(colKey));
+    const missing = INPUTS.map(f => f.id).filter(k => !found.has(k));
+    if (missing.length) throw new Error('faltan columnas: ' + missing.join(', '));
+
+    const existing = new Set(store.items.map(r => r.id));
+    let added = 0, dup = 0, bad = 0;
+    const now = new Date().toISOString();
+    ws.eachRow((row, rn) => {
+      if (rn === 1) return;
+      const o = {};
+      row.eachCell((cell, col) => { const k = colKey[col]; if (k) o[k] = cell.value; });
+      if (!Object.keys(o).length) return;
+      const rec = {
+        id: str(o.id) || newId(), creado: now, actualizado: now,
+        apPaterno: str(o.apPaterno), apMaterno: str(o.apMaterno), nombres: str(o.nombres), expediente: str(o.expediente),
+        fecha: toISODate(o.fecha), hora: toHHMM(o.hora),
+        edad: num(o.edad), peso: num(o.peso), fc: num(o.fc), watts: num(o.watts), obs: str(o.obs),
+      };
+      if (!rec.apPaterno && !rec.nombres && o.paciente) Object.assign(rec, splitPaciente(str(o.paciente)));
+      if (![rec.edad, rec.peso, rec.fc, rec.watts].every(Number.isFinite)) { bad++; return; }
+      if (existing.has(rec.id)) { dup++; return; }
+      existing.add(rec.id); store.items.push(rec); added++;
+    });
+    store.save(); updateCount(); renderList();
+    toast(`Importación: ${added} agregados, ${dup} ya existían${bad ? `, ${bad} filas incompletas omitidas` : ''}`);
+  } catch (e) { toast('No se pudo importar: ' + e.message); }
+}
+
+/* ---------- Instalación y modo sin conexión ---------- */
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; $('#btn-install').hidden = false; });
+window.addEventListener('appinstalled', () => { $('#btn-install').hidden = true; toast('App instalada'); });
+
+/* ---------- Inicio ---------- */
+function init() {
+  renderInputs();
+  store.load();
+  $('#banner-storage').hidden = store.ok;
+  $('#foot').textContent = `Ergometría v${APP_VERSION} · los cálculos son de apoyo; verifica antes de registrar`;
+
+  $('#form').addEventListener('submit', onSave);
+  $('#form').addEventListener('input', e => {
+    const fld = e.target.closest('.field');
+    if (fld && ['f-apPaterno', 'f-nombres', 'f-fecha'].includes(fld.id)) setFieldState(fld, '', '');
+    if (INPUTS.some(f => f.id === e.target.id)) update();
+  });
+  $('#btn-clear').addEventListener('click', resetForm);
+  $('#btn-cancel-edit').addEventListener('click', resetForm);
+  $('#tab-calc').addEventListener('click', () => showTab('calc'));
+  $('#tab-regs').addEventListener('click', () => showTab('regs'));
+  $('#list').addEventListener('click', onListClick);
+  $('#search').addEventListener('input', renderList);
+  $('#btn-download').addEventListener('click', onDownload);
+  $('#btn-share').addEventListener('click', onShare);
+  $('#file-import').addEventListener('change', onImport);
+  $('#btn-install').addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; $('#btn-install').hidden = true;
+  });
+  $('#btn-ios-close').addEventListener('click', () => { $('#banner-ios').hidden = true; try { localStorage.setItem('ergometria.iosHint', '1'); } catch (e) {} });
+
+  if (IS_IOS) { // En iPhone, compartir es la vía más fiable para guardar el archivo
+    $('#btn-share').classList.add('primary'); $('#btn-download').classList.remove('primary');
+    $('#btn-share').parentElement.prepend($('#btn-share'));
+  }
+  if (IN_FRAME) {
+    $('#banner-preview').hidden = false;
+    $('#btn-download').disabled = true; $('#btn-share').disabled = true;
+  } else {
+    let hinted = false; try { hinted = localStorage.getItem('ergometria.iosHint') === '1'; } catch (e) {}
+    if (IS_IOS && !IS_STANDALONE && !hinted) $('#banner-ios').hidden = false;
+    if ('serviceWorker' in navigator && window.isSecureContext) navigator.serviceWorker.register('sw.js').catch(() => {});
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  }
+  resetForm(); updateCount();
+}
+init();
+</script>
+</body>
+</html>
