@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ergometría</title>
 <meta name="description" content="Calculadora de fórmulas ergométricas con registro por paciente y exportación a Excel">
+<meta name="author" content="Dr. Francisco Ramírez Bernal">
 <meta name="theme-color" content="#f4f6f9" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0b1120" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
@@ -48,7 +49,7 @@ legend{float:left;width:100%}
 legend+*{clear:both}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
 .full{grid-column:1/-1}
-label.field{display:flex;flex-direction:column;gap:5px;font-size:.86rem;font-weight:600;min-width:0}
+.field{display:flex;flex-direction:column;gap:5px;font-size:.86rem;font-weight:600;min-width:0}
 .opt{color:var(--muted);font-weight:500}
 input,textarea{width:100%;font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px;outline:none;min-width:0}
 input[type=date],input[type=time]{min-height:44px}
@@ -61,6 +62,18 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(-
 .msg:empty{display:none}
 .field.warn input{border-color:var(--warn)}.field.warn .msg{color:var(--warn)}
 .field.bad input{border-color:var(--danger)}.field.bad .msg{color:var(--danger)}
+.fix{font-size:.75rem;font-weight:600;color:var(--accent)}
+.fix:empty{display:none}
+.fix .link{font-size:.75rem;margin-left:6px;text-decoration:underline}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg label{position:relative;display:block}
+.seg input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.seg span{display:block;text-align:center;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--bg);font-weight:650}
+.seg input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.seg input:focus-visible+span{box-shadow:0 0 0 3px var(--accent-soft)}
+.field.bad .seg span{border-color:var(--danger)}
+.code{display:block;font:650 1.05rem ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;padding:10px 12px;border-radius:10px;background:var(--surface-2);letter-spacing:.02em;min-height:44px}
+.code.pending{font:500 .85rem system-ui,sans-serif;color:var(--muted);letter-spacing:0;padding-top:12px}
 .results{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tile{background:var(--surface-2);border-radius:12px;padding:12px;min-width:0}
 .tile .k{font-size:.78rem;color:var(--muted);font-weight:650}
@@ -94,7 +107,8 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(-
 .rec .obs{font-size:.82rem;margin:8px 0 0;white-space:pre-wrap}
 .rec .row-actions{display:flex;gap:8px;margin-top:10px}
 .empty-list{text-align:center;color:var(--muted);padding:28px 12px;font-size:.92rem}
-.foot{text-align:center;color:var(--muted);font-size:.72rem;margin:8px 0 28px}
+.foot{text-align:center;color:var(--muted);font-size:.72rem;margin:16px 0 28px;padding-top:14px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:2px}
+.foot .autor{font-size:.8rem;font-weight:650;color:var(--text)}
 .modal{position:fixed;inset:0;background:rgba(2,6,23,.55);display:grid;place-items:center;padding:20px;z-index:60}
 .modal .box{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px;max-width:380px;width:100%}
 .modal p{margin:0 0 16px}
@@ -145,13 +159,27 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(-
       <fieldset class="card">
         <legend>Paciente</legend>
         <div class="grid">
-          <label class="field" id="f-apPaterno">Apellido paterno<input id="apPaterno" autocapitalize="words" enterkeyhint="next"><span class="msg"></span></label>
-          <label class="field" id="f-apMaterno">Apellido materno<input id="apMaterno" autocapitalize="words" enterkeyhint="next"><span class="msg"></span></label>
-          <label class="field full" id="f-nombres">Nombre(s)<input id="nombres" autocapitalize="words" enterkeyhint="next"><span class="msg"></span></label>
-          <label class="field full" id="f-expediente"><span>Expediente <span class="opt">(opcional)</span></span><input id="expediente" enterkeyhint="next"><span class="msg"></span></label>
+          <label class="field" id="f-apPaterno">Apellido paterno<input id="apPaterno" class="nombre" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next"><span class="msg"></span><span class="fix"></span></label>
+          <label class="field" id="f-apMaterno">Apellido materno<input id="apMaterno" class="nombre" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next"><span class="msg"></span><span class="fix"></span></label>
+          <label class="field full" id="f-nombres">Nombre(s)<input id="nombres" class="nombre" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="next"><span class="msg"></span><span class="fix"></span></label>
+          <div class="field full" id="f-sexo"><span>Sexo</span>
+            <div class="seg" role="radiogroup" aria-label="Sexo">
+              <label><input type="radio" name="sexo" value="M"><span>Masculino</span></label>
+              <label><input type="radio" name="sexo" value="F"><span>Femenino</span></label>
+            </div>
+            <span class="msg"></span>
+          </div>
           <label class="field" id="f-fecha">Fecha de la prueba<input type="date" id="fecha"><span class="msg"></span></label>
           <label class="field" id="f-hora">Hora<input type="time" id="hora"><span class="msg"></span></label>
+          <div class="field full" id="f-expediente"><span>Expediente <span class="opt">(automático)</span></span>
+            <output id="expediente" class="code pending"></output>
+          </div>
         </div>
+      </fieldset>
+
+      <fieldset class="card">
+        <legend>Motivo del estudio</legend>
+        <textarea id="motivo" rows="2" placeholder="Opcional"></textarea>
       </fieldset>
 
       <fieldset class="card">
@@ -210,8 +238,11 @@ input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(-
 
 <script>
 'use strict';
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.1';
 const STORE_KEY = 'ergometria.registros.v1';
+const COUNTER_KEY = 'ergometria.contadores.v1';
+const AUTOR = 'Dr. Francisco Ramírez Bernal';
+const AUTORIA = `Sistema diseñado y desarrollado por el ${AUTOR}`;
 const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 const IN_FRAME = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
 const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -247,7 +278,111 @@ const FORMULAS = [
     calc: v => ((10.8 * v.watts) / v.peso + 7) / 3.5, xl: c => `((10.8*${c.watts})/${c.peso}+7)/3.5` },
 ];
 
-const TEXT_FIELDS = ['apPaterno', 'apMaterno', 'nombres', 'expediente', 'fecha', 'hora', 'obs'];
+const TEXT_FIELDS = ['apPaterno', 'apMaterno', 'nombres', 'fecha', 'hora', 'motivo', 'obs'];
+const NAME_FIELDS = ['apPaterno', 'apMaterno', 'nombres'];
+const SEXO = { M: 'Masculino', F: 'Femenino' };
+
+/* ---------- Nombres: formato habitual y ortografía ----------
+   Partículas: van en minúscula dentro del nombre y no cuentan para las iniciales.
+   Diccionario: forma correcta de nombres y apellidos frecuentes; para agregar uno,
+   escríbelo bien acentuado en la lista (también corrige acentos sobrantes, p. ej. Ruíz → Ruiz). */
+const PARTICULAS = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'e', 'da', 'das', 'di', 'do', 'dos', 'van', 'von', 'der']);
+const DICCIONARIO_NOMBRES = `
+Acuña Alcántara Alemán Álvarez Andrés Ángeles Aragón Arámbula Arévalo Ávalos Ávila Avilés Aviña Ayón Báez Bañuelos
+Bárcenas Barragán Barrón Bátiz Beltrán Benítez Beristáin Bermúdez Bolaños Briseño Calderón Cantón Cantú Cárdenas
+Carreño Carreón Carrión Castañeda Cázares Cedeño Cerón Chacón Chávez Colín Córdoba Córdova Cortázar Cortés Cuéllar
+Dávalos Dávila Díaz Domínguez Dueñas Durán Echeverría Enríquez Farías Fernández Frías Gaitán Galván Gálvez Gámez
+Gamiño García Garcés Garduño Gastélum Gaytán Girón Godínez Gómez González Gudiño Guillén Gutiérrez Guzmán Hernández
+Ibáñez Íñiguez Jácome Jáuregui Jiménez Juárez Lárraga Larrañaga Lázaro León Limón López Macías Magaña Malagón
+Manríquez Marín Márquez Marroquín Martín Martínez Mazón Mejía Meléndez Méndez Mendívil Monárrez Mondragón Montaño
+Monzón Morán Mújica Muñiz Muñoz Murguía Nájera Narváez Núñez Nuño Ocaña Olguín Orduña Ordóñez Ortiz Ortuño Padrón
+Páez Patiño Peláez Peña Peñaloza Pérez Pinzón Quiñones Ramírez Ramón Rendón Rentería Rincón Ríos Rodríguez Román Ruiz
+Sáenz Sáez Saldaña Saldívar Sámano Sánchez Santamaría Santibáñez Santillán Sepúlveda Simón Solís Solórzano Suárez
+Téllez Treviño Urías Valdés Vásquez Vázquez Velásquez Velázquez Vélez Villagómez Villalón Villaseñor Yáñez Zárate Zúñiga
+Aarón Adán Adrián Agustín Aída Álvaro Anahí Anaís Ángel Ángela Angélica Aníbal Ascensión Asunción Bárbara Belén
+Benjamín Bernabé César Concepción Cristóbal Cuauhtémoc Dámaso Damián Darío Débora Edén Efraín Elías Eloísa
+Encarnación Eréndira Esaú Fabián Fátima Félix Fermín Germán Haydée Héctor Hernán Hipólito Inés Íñigo Isaías Iván
+Jazmín Jerónimo Jesús Joaquín Jonás José Josué Julián Lucía Luis María Matías Máximo Melquíades Moisés Mónica Nahúm
+Néstor Nicolás Noé Noemí Nohemí Óscar Raúl Rocío Rómulo Rosalía Rubén Rubí Salomón Sarahí Saúl Sebastián Sofía Tomás
+Valentín Verónica Víctor Xóchitl Yazmín`;
+let ORTOGRAFIA_MAP = null;
+const ORTOGRAFIA = { get: k => (ORTOGRAFIA_MAP ||= new Map(DICCIONARIO_NOMBRES.trim().split(/\s+/).map(w => [norm(w), w]))).get(k) };
+
+function tituloPalabra(w) {
+  const low = w.toLocaleLowerCase('es-MX');
+  if (low.length > 2 && low.startsWith('mc')) return 'Mc' + low.charAt(2).toLocaleUpperCase('es-MX') + low.slice(3);
+  return low.split("'").map(p => p.charAt(0).toLocaleUpperCase('es-MX') + p.slice(1)).join("'");
+}
+/* Devuelve { casing: solo mayúsculas/minúsculas, value: con ortografía, cambios: [[antes, después]] } */
+function formatoNombre(texto) {
+  const palabras = String(texto || '').replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+  const casing = [], value = [];
+  palabras.forEach((w, i) => {
+    const partesC = [], partesV = [];
+    w.split('-').forEach((p, j) => {
+      if (!p) { partesC.push(p); partesV.push(p); return; }
+      const low = p.toLocaleLowerCase('es-MX');
+      const c = (PARTICULAS.has(low) && !(i === 0 && j === 0)) ? low : tituloPalabra(p);
+      partesC.push(c);
+      partesV.push(PARTICULAS.has(low) ? c : (ORTOGRAFIA.get(norm(c)) || c));
+    });
+    casing.push(partesC.join('-')); value.push(partesV.join('-'));
+  });
+  const cambios = [];
+  palabras.forEach((w, i) => { if (w !== value[i]) cambios.push([w, value[i]]); });
+  return { casing: casing.join(' '), value: value.join(' '), cambios };
+}
+/* Aplica el formato a un campo de nombre; respeta "Deshacer" (data-keep) */
+function normalizarCampoNombre(inp, mostrar = true) {
+  const fix = inp.closest('.field').querySelector('.fix');
+  const { casing, value, cambios } = formatoNombre(inp.value);
+  if (inp.dataset.keep && inp.dataset.keep === casing) { inp.value = casing; return casing; }
+  delete inp.dataset.keep;
+  inp.value = value;
+  if (!mostrar) return value;
+  if (!cambios.length) { fix.textContent = ''; return value; }
+  const ortografia = casing !== value;
+  fix.innerHTML = `Corregido: ${cambios.map(([a, b]) => `${esc(a)} → ${esc(b)}`).join(', ')}` +
+    (ortografia ? ' <button type="button" class="link">Deshacer acentos</button>' : '');
+  if (ortografia) fix.querySelector('button').onclick = () => {
+    inp.value = casing; inp.dataset.keep = casing;
+    fix.textContent = 'Se conservó sin corrección de acentos'; actualizarExpediente();
+  };
+  return value;
+}
+
+/* ---------- Expediente: AAMMDD.INICIALES.NN ---------- */
+function iniciales(r) {
+  return [r.apPaterno, r.apMaterno, r.nombres].join(' ').split(/[\s-]+/)
+    .filter(w => w && !PARTICULAS.has(w.toLocaleLowerCase('es-MX')))
+    .map(w => norm(w).replace(/[^a-z]/g, '').charAt(0).toUpperCase()).join('');
+}
+function seqDe(r) {
+  if (Number.isInteger(r.seqDia)) return r.seqDia;
+  const m = /^(?:\d{6}|\d{8})\.[A-Z]*\.(\d+)$/.exec(r.expediente || '');
+  return m ? +m[1] : null;
+}
+function siguienteSeq(fecha, excluirId) {
+  let max = store.counters[fecha] || 0;
+  for (const r of store.items) {
+    if (r.id === excluirId || r.fecha !== fecha) continue;
+    const s = seqDe(r); if (s && s > max) max = s;
+  }
+  return max + 1;
+}
+function codigoExpediente(fecha, ini, seq) { return `${fecha.replace(/-/g, '').slice(2)}.${ini}.${String(seq).padStart(2, '0')}`; }
+function seqParaFormulario(fecha) {
+  const orig = editingId ? store.items.find(x => x.id === editingId) : null;
+  return (orig && orig.fecha === fecha && seqDe(orig)) ? seqDe(orig) : siguienteSeq(fecha);
+}
+function actualizarExpediente() {
+  const out = $('#expediente');
+  const datos = { apPaterno: $('#apPaterno').value, apMaterno: $('#apMaterno').value, nombres: $('#nombres').value };
+  const fecha = $('#fecha').value, ini = iniciales(datos);
+  const listo = fecha && datos.apPaterno.trim() && datos.nombres.trim();
+  out.classList.toggle('pending', !listo);
+  out.textContent = listo ? codigoExpediente(fecha, ini, seqParaFormulario(fecha)) : 'Se genera con la fecha, el apellido paterno y el nombre';
+}
 
 /* ---------- Utilidades ---------- */
 const $ = s => document.querySelector(s);
@@ -291,17 +426,23 @@ function compute(v) {
 
 /* ---------- Almacenamiento local ---------- */
 const store = {
-  items: [], ok: true,
+  items: [], counters: {}, ok: true,
   load() {
     try {
       const raw = localStorage.getItem(STORE_KEY);
       const data = raw ? JSON.parse(raw) : [];
       this.items = Array.isArray(data) ? data : [];
-    } catch (e) { this.ok = false; this.items = []; }
+      const c = JSON.parse(localStorage.getItem(COUNTER_KEY) || '{}');
+      this.counters = (c && typeof c === 'object') ? c : {};
+    } catch (e) { this.ok = false; this.items = []; this.counters = {}; }
   },
+  bump(fecha, seq) { if (fecha && seq) this.counters[fecha] = Math.max(this.counters[fecha] || 0, seq); },
   save() {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(this.items)); this.ok = true; }
-    catch (e) { this.ok = false; }
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify(this.items));
+      localStorage.setItem(COUNTER_KEY, JSON.stringify(this.counters));
+      this.ok = true;
+    } catch (e) { this.ok = false; }
     $('#banner-storage').hidden = this.ok;
     return this.ok;
   },
@@ -378,34 +519,46 @@ function update() { renderResults(readInputs(true, false).values); }
 function resetForm() {
   for (const k of TEXT_FIELDS) $('#' + k).value = '';
   for (const f of INPUTS) $('#' + f.id).value = '';
+  document.querySelectorAll('input[name=sexo]').forEach(r => { r.checked = false; });
+  NAME_FIELDS.forEach(k => { delete $('#' + k).dataset.keep; });
+  document.querySelectorAll('.fix').forEach(el => { el.textContent = ''; });
   $('#fecha').value = todayISO(); $('#hora').value = nowHHMM();
   document.querySelectorAll('.field').forEach(el => el.classList.remove('warn', 'bad'));
-  ['apPaterno', 'nombres', 'fecha'].forEach(k => setFieldState($('#f-' + k), '', ''));
+  ['apPaterno', 'nombres', 'fecha', 'sexo'].forEach(k => setFieldState($('#f-' + k), '', ''));
   editingId = null; $('#edit-note').hidden = true; $('#btn-save').textContent = 'Guardar registro';
-  update();
+  update(); actualizarExpediente();
 }
 function fillForm(r) {
   for (const k of TEXT_FIELDS) $('#' + k).value = r[k] || '';
   for (const f of INPUTS) $('#' + f.id).value = Number.isFinite(r[f.id]) ? String(r[f.id]) : '';
+  document.querySelectorAll('input[name=sexo]').forEach(x => { x.checked = x.value === r.sexo; });
+  NAME_FIELDS.forEach(k => { const inp = $('#' + k); inp.dataset.keep = inp.value; });
+  document.querySelectorAll('.fix').forEach(el => { el.textContent = ''; });
   update();
 }
 function onSave(ev) {
   ev.preventDefault();
   let ok = true;
-  const ap = $('#apPaterno').value.trim(), nom = $('#nombres').value.trim(), fe = $('#fecha').value;
+  const [ap, am, nom] = NAME_FIELDS.map(k => normalizarCampoNombre($('#' + k)));
+  const fe = $('#fecha').value;
+  const sexoSel = document.querySelector('input[name=sexo]:checked');
   setFieldState($('#f-apPaterno'), ap ? '' : 'bad', ap ? '' : 'Escribe el apellido paterno'); if (!ap) ok = false;
   setFieldState($('#f-nombres'), nom ? '' : 'bad', nom ? '' : 'Escribe el nombre'); if (!nom) ok = false;
   setFieldState($('#f-fecha'), fe ? '' : 'bad', fe ? '' : 'Indica la fecha'); if (!fe) ok = false;
+  setFieldState($('#f-sexo'), sexoSel ? '' : 'bad', sexoSel ? '' : 'Selecciona el sexo'); if (!sexoSel) ok = false;
   const { values, allOk } = readInputs(true, true);
   if (!ok || !allOk) { toast('Revisa los campos marcados en rojo'); return; }
 
   const now = new Date().toISOString();
   const rec = {
-    apPaterno: ap, apMaterno: $('#apMaterno').value.trim(), nombres: nom,
-    expediente: $('#expediente').value.trim(), fecha: fe, hora: $('#hora').value || '',
+    apPaterno: ap, apMaterno: am, nombres: nom, sexo: sexoSel.value,
+    fecha: fe, hora: $('#hora').value || '',
     edad: values.edad, peso: values.peso, fc: values.fc, watts: values.watts,
-    obs: $('#obs').value.trim(), actualizado: now,
+    motivo: $('#motivo').value.trim(), obs: $('#obs').value.trim(), actualizado: now,
   };
+  rec.seqDia = seqParaFormulario(fe);
+  rec.expediente = codigoExpediente(fe, iniciales(rec), rec.seqDia);
+  store.bump(fe, rec.seqDia);
   if (editingId) {
     const i = store.items.findIndex(x => x.id === editingId);
     if (i >= 0) store.items[i] = { ...store.items[i], ...rec };
@@ -432,13 +585,15 @@ function renderList() {
   $('#list').innerHTML = items.map(r => {
     const res = compute(r);
     const chips = FORMULAS.map(f => `<span class="chip">${esc(f.chip(fmt(res[f.id], f.dec)))}</span>`).join('');
-    const meta = [fmtFecha(r.fecha) + (r.hora ? ' · ' + r.hora : ''), r.expediente ? 'Exp. ' + r.expediente : '',
+    const meta = [r.expediente ? 'Exp. ' + r.expediente : '', fmtFecha(r.fecha) + (r.hora ? ' · ' + r.hora : ''),
+      SEXO[r.sexo] || '',
       `${fmt(r.edad, 0)} años · ${fmt(r.peso, r.peso % 1 ? 1 : 0)} kg · FC ${fmt(r.fc, 0)} lpm · ${fmt(r.watts, 0)} W`].filter(Boolean).join(' · ');
     return `<article class="card rec" data-id="${esc(r.id)}">
       <div class="name">${esc(nombreCompleto(r))}</div>
       <div class="meta">${esc(meta)}</div>
       <div class="chips">${chips}</div>
-      ${r.obs ? `<p class="obs">${esc(r.obs)}</p>` : ''}
+      ${r.motivo ? `<p class="obs"><b>Motivo:</b> ${esc(r.motivo)}</p>` : ''}
+      ${r.obs ? `<p class="obs"><b>Observaciones:</b> ${esc(r.obs)}</p>` : ''}
       <div class="row-actions">
         <button class="btn small" data-act="edit">Editar</button>
         <button class="btn small danger" data-act="del">Eliminar</button>
@@ -451,7 +606,7 @@ async function onListClick(ev) {
   const id = btn.closest('[data-id]').dataset.id;
   const rec = store.items.find(x => x.id === id); if (!rec) return;
   if (btn.dataset.act === 'edit') {
-    fillForm(rec); editingId = id;
+    fillForm(rec); editingId = id; actualizarExpediente();
     $('#edit-note').hidden = false; $('#btn-save').textContent = 'Guardar cambios';
     showTab('calc');
   } else if (btn.dataset.act === 'del') {
@@ -489,13 +644,15 @@ function loadExcelJS() {
   return excelReady;
 }
 const XL_COLS = [
+  { key: 'expediente', header: 'Expediente', width: 20 },
   { key: 'fecha', header: 'Fecha', width: 12 },
   { key: 'hora', header: 'Hora', width: 8 },
   { key: 'paciente', header: 'Paciente', width: 34 },
   { key: 'apPaterno', header: 'Apellido paterno', width: 18 },
   { key: 'apMaterno', header: 'Apellido materno', width: 18 },
   { key: 'nombres', header: 'Nombre(s)', width: 20 },
-  { key: 'expediente', header: 'Expediente', width: 14 },
+  { key: 'sexo', header: 'Sexo', width: 11 },
+  { key: 'motivo', header: 'Motivo del estudio', width: 36 },
   { key: 'edad', header: 'Edad (años)', width: 11 },
   { key: 'peso', header: 'Peso (kg)', width: 10 },
   { key: 'fc', header: 'FC alcanzada (lpm)', width: 13 },
@@ -511,7 +668,8 @@ function isoToExcelDate(iso) {
 async function buildWorkbook(records) {
   await loadExcelJS();
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Ergometría'; wb.created = new Date();
+  wb.creator = `Ergometría v${APP_VERSION}`; wb.created = new Date();
+  wb.title = 'Registro de ergometría'; wb.description = `${AUTORIA}.`;
   wb.calcProperties.fullCalcOnLoad = true;
   const ws = wb.addWorksheet('Registros', { views: [{ state: 'frozen', ySplit: 1 }] });
   ws.columns = XL_COLS.map(c => ({ header: c.header, key: c.key, width: c.width }));
@@ -524,7 +682,8 @@ async function buildWorkbook(records) {
     const row = {
       fecha: isoToExcelDate(r.fecha), hora: r.hora || '', paciente: nombreCompleto(r),
       apPaterno: r.apPaterno || '', apMaterno: r.apMaterno || '', nombres: r.nombres || '', expediente: r.expediente || '',
-      edad: r.edad, peso: r.peso, fc: r.fc, watts: r.watts, obs: r.obs || '', id: r.id,
+      sexo: SEXO[r.sexo] || '', edad: r.edad, peso: r.peso, fc: r.fc, watts: r.watts,
+      motivo: r.motivo || '', obs: r.obs || '', id: r.id,
     };
     for (const f of FORMULAS) row[f.id] = res[f.id] == null ? { formula: f.xl(ref) } : { formula: f.xl(ref), result: res[f.id] };
     ws.addRow(row);
@@ -556,6 +715,7 @@ async function buildWorkbook(records) {
   wf.eachRow(row => row.eachCell(cell => { cell.alignment = { vertical: 'top', wrapText: true }; }));
   wf.addRow({});
   wf.addRow({ p: `Generado con Ergometría v${APP_VERSION} el ${fmtFecha(todayISO())} a las ${nowHHMM()}` });
+  wf.addRow({ p: `${AUTORIA}.` });
   return wb;
 }
 function exportName() { const d = new Date(); return `Registro_de_ergometria__${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}.xlsx`; }
@@ -658,12 +818,15 @@ async function onImport(ev) {
       const rec = {
         id: str(o.id) || newId(), creado: now, actualizado: now,
         apPaterno: str(o.apPaterno), apMaterno: str(o.apMaterno), nombres: str(o.nombres), expediente: str(o.expediente),
+        sexo: ({ masculino: 'M', m: 'M', hombre: 'M', h: 'M', femenino: 'F', f: 'F', mujer: 'F' })[norm(str(o.sexo))] || '',
         fecha: toISODate(o.fecha), hora: toHHMM(o.hora),
-        edad: num(o.edad), peso: num(o.peso), fc: num(o.fc), watts: num(o.watts), obs: str(o.obs),
+        edad: num(o.edad), peso: num(o.peso), fc: num(o.fc), watts: num(o.watts),
+        motivo: str(o.motivo), obs: str(o.obs),
       };
       if (!rec.apPaterno && !rec.nombres && o.paciente) Object.assign(rec, splitPaciente(str(o.paciente)));
       if (![rec.edad, rec.peso, rec.fc, rec.watts].every(Number.isFinite)) { bad++; return; }
       if (existing.has(rec.id)) { dup++; return; }
+      const s = seqDe(rec); if (s) { rec.seqDia = s; store.bump(rec.fecha, s); }
       existing.add(rec.id); store.items.push(rec); added++;
     });
     store.save(); updateCount(); renderList();
@@ -681,13 +844,20 @@ function init() {
   renderInputs();
   store.load();
   $('#banner-storage').hidden = store.ok;
-  $('#foot').textContent = `Ergometría v${APP_VERSION} · los cálculos son de apoyo; verifica antes de registrar`;
+  $('#foot').innerHTML = `<span class="autor">Diseño y desarrollo: ${esc(AUTOR)}</span>
+    <span>Ergometría v${APP_VERSION} · © ${new Date().getFullYear()}</span>
+    <span>Los cálculos son de apoyo; verifica antes de registrar.</span>`;
 
   $('#form').addEventListener('submit', onSave);
   $('#form').addEventListener('input', e => {
     const fld = e.target.closest('.field');
-    if (fld && ['f-apPaterno', 'f-nombres', 'f-fecha'].includes(fld.id)) setFieldState(fld, '', '');
+    if (fld && ['f-apPaterno', 'f-nombres', 'f-fecha', 'f-sexo'].includes(fld.id)) setFieldState(fld, '', '');
     if (INPUTS.some(f => f.id === e.target.id)) update();
+    if (NAME_FIELDS.includes(e.target.id) || e.target.id === 'fecha') actualizarExpediente();
+  });
+  $('#form').addEventListener('change', e => {
+    if (e.target.name === 'sexo') setFieldState($('#f-sexo'), '', '');
+    if (NAME_FIELDS.includes(e.target.id)) { normalizarCampoNombre(e.target); actualizarExpediente(); }
   });
   $('#btn-clear').addEventListener('click', resetForm);
   $('#btn-cancel-edit').addEventListener('click', resetForm);

@@ -1,6 +1,6 @@
 /* Service worker de Ergometría: permite usar la app sin conexión.
    Al publicar una versión nueva, cambia CACHE (por ejemplo, v1.0.1). */
-const CACHE = 'ergometria-v1.0.0';
+const CACHE = 'ergometria-v1.1.1';
 const ASSETS = [
   './',
   './index.html',

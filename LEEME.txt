@@ -1,4 +1,5 @@
-ERGOMETRÍA — App web instalable (PWA) v1.0.0
+ERGOMETRÍA — App web instalable (PWA) v1.1.1
+Diseño y desarrollo: Dr. Francisco Ramírez Bernal
 
 CONTENIDO
 - index.html: la app (interfaz, fórmulas y lógica).
@@ -19,6 +20,10 @@ INSTALARLA EN EL TELÉFONO
 - iPhone (Safari): abre el enlace → Compartir → "Agregar a pantalla de inicio".
 
 NOTAS
+- Expediente automático: AAMMDD.INICIALES.NN (fecha de la prueba, iniciales empezando por el apellido
+  paterno sin partículas como «de» o «la», y número de paciente de ese día en ese teléfono).
+- Nombres: se ajustan a mayúsculas y minúsculas habituales y se corrigen acentos de nombres y apellidos
+  frecuentes (lista DICCIONARIO_NOMBRES en index.html); «Deshacer acentos» conserva lo escrito.
 - El código queda público en GitHub; los datos de pacientes no: se guardan solo en cada teléfono.
 - Cada teléfono guarda sus propios registros. Exporta el Excel con regularidad (es el respaldo)
   y usa "Importar Excel (restaurar)" para recuperarlo en otro teléfono.
